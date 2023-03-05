@@ -7,6 +7,7 @@ import { api } from "~/utils/api";
 
 const Home: NextPage = () => {
   const hello = api.example.hello.useQuery({ text: "from tRPC" });
+  const test = api.user.test.useQuery(undefined);
 
   return (
     <>
@@ -48,6 +49,7 @@ const Home: NextPage = () => {
             <p className="text-2xl text-white">
               {hello.data ? hello.data.greeting : "Loading tRPC query..."}
             </p>
+            <button onClick={() => test.data || 'loading'}></button>
             <AuthShowcase />
           </div>
         </div>
@@ -60,6 +62,7 @@ export default Home;
 
 const AuthShowcase: React.FC = () => {
   const { data: sessionData } = useSession();
+  console.log(`session: ${sessionData?.toString() ?? "null"}`);
 
   const { data: secretMessage } = api.example.getSecretMessage.useQuery(
     undefined, // no input

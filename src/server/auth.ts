@@ -8,6 +8,8 @@ import DiscordProvider from "next-auth/providers/discord";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
+import CredentialsProvider from "next-auth/providers/credentials";
+import argon2 from 'argon2';
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -19,6 +21,8 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
+      name: string;
+      email: string;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];
@@ -36,21 +40,27 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
+  secret: process.env.AUTH_SECRET,
+  session: {
+    strategy: "jwt",
+
+  },
   callbacks: {
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        // session.user.role = user.role; <-- put other properties on the session here
-      }
+    session({ session }) {
+      // if (session.user) {
+      //   session.user.name = user.name || '';
+      //   session.user.email = user.email || '';
+      //   // session.user.role = user.role; <-- put other properties on the session here
+      // }
       return session;
     },
+    jwt({token}) {
+      console.log(`in jwt ${token.toString()}`)
+      return token;
+    }
   },
   adapter: PrismaAdapter(prisma),
   providers: [
-    DiscordProvider({
-      clientId: env.DISCORD_CLIENT_ID,
-      clientSecret: env.DISCORD_CLIENT_SECRET,
-    }),
     /**
      * ...add more providers here.
      *
@@ -60,6 +70,33 @@ export const authOptions: NextAuthOptions = {
      *
      * @see https://next-auth.js.org/providers/github
      */
+    CredentialsProvider({
+      // The name to display on the sign in form (e.g. 'Sign in with...')
+    name: 'Credentials',
+    // The credentials is used to generate a suitable form on the sign in page.
+    // You can specify whatever fields you are expecting to be submitted.
+    // e.g. domain, username, password, 2FA token, etc.
+    // You can pass any HTML attribute to the <input> tag through the object.
+    credentials: {
+      email: { label: "Email", type: "text", placeholder: "jsmith" },
+      password: {  label: "Password", type: "password" }
+    },
+    async authorize(credentials) {
+      const user = await prisma.user.findFirst({
+				where: {
+					email: credentials?.email
+				},
+			});
+      
+      const passwordValid = await argon2.verify(user?.password || '', credentials?.password || '');
+
+      if (passwordValid) {
+        return user;
+      } 
+
+      return null;
+    }
+    })
   ],
 };
 
@@ -73,4 +110,12 @@ export const getServerAuthSession = (ctx: {
   res: GetServerSidePropsContext["res"];
 }) => {
   return getServerSession(ctx.req, ctx.res, authOptions);
+};
+
+
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
 };
