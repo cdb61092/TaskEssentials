@@ -1,6 +1,8 @@
 import { type AppType } from "next/app";
 import { type Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
+import { MantineProvider } from '@mantine/core';
+import Layout from "~/components/layout";
 
 import { api } from "~/utils/api";
 
@@ -12,7 +14,11 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <Component {...pageProps} />
+      <MantineProvider theme={{ colorScheme: 'dark' }} withGlobalStyles withNormalizeCSS>
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+      </MantineProvider>
     </SessionProvider>
   );
 };
