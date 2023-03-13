@@ -20,6 +20,11 @@ export const taskRouter = createTRPCRouter({
         data: {
           title: input.title,
           content: input.content,
+          status: {
+            connect: {
+              id: "clf631pkj0006u6c85i86iuo2",
+            },
+          },
           creator: {
             connect: {
               email: ctx.session.user.email,
@@ -52,4 +57,15 @@ export const taskRouter = createTRPCRouter({
 
       return task;
     }),
+  getTasks: publicProcedure.query(async ({ ctx }) => {
+    const tasks = await ctx.prisma.task.findMany({
+      include: {
+        creator: true,
+        assignedTo: true,
+        status: true,
+      },
+    });
+
+    return tasks;
+  }),
 });
