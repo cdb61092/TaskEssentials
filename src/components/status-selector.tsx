@@ -6,7 +6,6 @@ interface ItemProps extends React.ComponentPropsWithoutRef<"div"> {
   color: string;
 }
 
-// eslint-disable-next-line react/display-name
 const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
   ({ label, color, ...others }: ItemProps, ref) => (
     <div
@@ -30,6 +29,8 @@ const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
     </div>
   )
 );
+
+SelectItem.displayName = "SelectItem";
 
 const StatusSelector = () => {
   const statuses = api.status.getStatuses.useQuery();
