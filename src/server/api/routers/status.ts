@@ -15,4 +15,14 @@ export const statusRouter = createTRPCRouter({
         },
       });
     }),
+
+  getStatuses: protectedProcedure.query(async ({ ctx }) => {
+    const statuses = await ctx.prisma.status.findMany();
+    console.log(`statuses: ${JSON.stringify(statuses)}`);
+    return statuses.map((status) => ({
+      value: status.id,
+      label: status.status,
+      color: status.color,
+    }));
+  }),
 });
