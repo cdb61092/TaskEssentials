@@ -92,5 +92,6 @@ model AssigneesToTasks {
 model Status {
   id               String             @id @default(cuid())
   status           String
+  color            String             @default("#0000FF")  
   tasks            Task[]
 }
